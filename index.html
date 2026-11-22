@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Есеп-Қала: Математик-Батыр</title>
+<style>
+:root{--bg:#e8f6ff;--ink:#16324f;--blue:#1e88e5;--sun:#ffc107;--green:#2e7d32;--red:#d84315;--pink:#ec407a;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Trebuchet MS",Arial,sans-serif;background:linear-gradient(#cdeeff,#f4fbff 60%,#c8f0c8);color:var(--ink);min-height:100vh}
+.wrap{max-width:860px;margin:0 auto;padding:14px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+h1{font-size:1.5rem;margin:0}
+.hud{display:flex;gap:8px;font-weight:700}
+.pill{background:var(--card);border-radius:20px;padding:6px 12px;box-shadow:0 2px 6px #0002}
+.track{display:flex;gap:6px;margin:12px 0}
+.dot{flex:1;height:12px;border-radius:6px;background:#b9d3e6}
+.dot.done{background:var(--green)}.dot.now{background:var(--sun)}
+.card{background:var(--card);border-radius:20px;padding:20px;box-shadow:0 4px 14px #0002}
+.bot{display:flex;gap:14px;align-items:flex-start}
+.robot{font-size:3.2rem;line-height:1;animation:bob 2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.bubble{background:#fff8e1;border:2px solid var(--sun);border-radius:16px;padding:12px 16px;font-size:1.15rem;flex:1}
+.balls{display:flex;flex-wrap:wrap;gap:4px;margin:12px 0}
+.b{width:22px;height:22px;border-radius:50%;display:inline-block;animation:pop .3s both}
+.b.m{background:var(--blue)}.b.f{background:var(--pink)}.b.x{background:#cfd8dc;border:2px dashed #90a4ae}
+@keyframes pop{from{transform:scale(0)}}
+.btn{background:var(--blue);color:#fff;border:0;border-radius:14px;padding:12px 20px;font-size:1.1rem;font-weight:700;cursor:pointer;margin:6px 6px 0 0}
+.btn:hover{filter:brightness(1.1)}.btn.g{background:var(--green)}.btn.o{background:#fb8c00}
+.opt{display:block;width:100%;text-align:left;background:#f1f8ff;border:3px solid #bbdefb;border-radius:14px;padding:12px 16px;font-size:1.2rem;margin:8px 0;cursor:pointer}
+.opt:hover{border-color:var(--blue)}
+.opt.ok{background:#c8e6c9;border-color:var(--green)}.opt.no{background:#ffccbc;border-color:var(--red)}
+.q{font-size:1.3rem;font-weight:700;margin:4px 0 10px}
+.eq{font-size:1.5rem;margin:10px 0}
+input.n{width:84px;font-size:1.4rem;text-align:center;border:3px solid #bbdefb;border-radius:10px;padding:6px;margin:0 4px}
+input.n.ok{background:#c8e6c9;border-color:var(--green)}input.n.no{background:#ffccbc;border-color:var(--red)}
+.fb{min-height:30px;font-weight:700;font-size:1.15rem;margin-top:8px}
+.fb.ok{color:var(--green)}.fb.no{color:var(--red)}
+.reveal{background:#e8f5e9;border-radius:12px;padding:8px 14px;margin:8px 0;font-size:1.25rem;animation:pop .3s both}
+.big{font-size:3rem;text-align:center}
+.stars{font-size:2.6rem;text-align:center;letter-spacing:6px}
+.score{font-size:1.4rem;text-align:center;font-weight:700;margin:8px 0}
+.conf{position:fixed;top:-20px;font-size:1.6rem;animation:fall 2.4s linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+footer{text-align:center;font-size:.85rem;margin-top:14px;opacity:.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <header>
+  <h1>🏙️ Есеп-Қала: Математик-Батыр</h1>
+  <div class="hud"><span class="pill">⭐ <span id="xp">0</span> XP</span><span class="pill">🔥 <span id="streak">0</span></span></div>
+ </header>
+ <div class="track" id="track"></div>
+ <div class="card" id="stage"></div>
+ <footer>2-сынып · Математика · №46 сабақ · «Жай есептерді құрама есепке айналдыру» · ЖИ көмегімен жасалған</footer>
+</div>
+
+<script>
+// ---------- Деректер ----------
+const LESSON = [
+ {say:"Сәлем, Батыр! Мен — Сандық-бот 🤖. Бүгін «Есеп-Қала» аулаға барамыз. Алдымен жай есепті еске түсірейік.",
+  task:"Аулада 17 ұл және 18 қыз ойнап жүр. Барлығы неше бала?", m:17,f:18,btn:"Қосамыз ➕",res:"17 + 18 = 35 (бала) — бір амалмен шықты. Бұл — жай есеп."},
+ {say:"Керемет! Енді екінші жай есеп. Бір амал ғана керек.",
+  task:"Аулада 35 бала болды. Олардың 19-ы үйіне кетті. Неше бала қалды?", m:35,f:0,btn:"Азайтамыз ➖",res:"35 − 19 = 16 (бала) — бұл да жай есеп."},
+ {say:"Енді екі жай есепті біріктіреміз. Сонда құрама есеп шығады — оны екі амалмен шығарамыз!",
+  task:"Аулада 17 ұл және 18 қыз ойнап жүрді. Олардың 19-ы үйіне кетті. Аулада неше бала қалды?",
+  steps:["1) 17 + 18 = 35 (бала) — ойнап жүрген балалар","2) 35 − 19 = 16 (бала) — қалған балалар","Өрнек: (17 + 18) − 19 = 16","Жауабы: аулада 16 бала қалды."]}
+];
+const QS = [
+ {t:"choice",q:"Құрама есеп неше амалмен шығарылады?",o:["Бір амалмен","Екі немесе одан да көп амалмен","Амалсыз"],a:1,h:"Құрама есеп — бірнеше жай есептің қосындысы."},
+ {t:"choice",q:"Аулада 17 ұл, 18 қыз ойнап жүр, 19 бала кетті. Қай өрнек дұрыс?",o:["17 + (18 − 19)","(17 + 18) − 19","17 − 18 + 19"],a:1,h:"Алдымен барлық баланы табамыз, содан кейін кеткенін азайтамыз."},
+ {t:"input",q:"Қыздар 34 оюдың және 42 гүлдің суретін бояды. 1-амал: барлығы неше сурет?",eq:"34 + 42 = #",a:[76],h:"Қосу амалы: 34 + 42."},
+ {t:"input",q:"Олардың 55-і сынып бөлмесін безендіруге жұмсалды. 2-амал: неше сурет қалды?",eq:"76 − 55 = #",a:[21],h:"Азайту амалы: 76 − 55."},
+ {t:"choice",q:"Көркем еңбек есебінің толық өрнегін таңда.",o:["34 + 42 + 55","(34 + 42) − 55","34 + (42 − 55)"],a:1,h:"1-амал жақшаға алынады."},
+ {t:"input",q:"Жасырын санды тап ⭐ (1)",eq:"32 + 24 − # = 41",a:[15],h:"56 − 41 = ?"},
+ {t:"input",q:"Жасырын санды тап ⭐ (2)",eq:"56 + # + 11 = 75",a:[8],h:"75 − 56 − 11 = ?"},
+ {t:"input",q:"Жасырын санды тап ⭐ (3)",eq:"# − (13 + 21) = 57",a:[91],h:"Жақшаның мәні 34. 57 + 34 = ?"},
+ {t:"input",q:"Жасырын санды тап ⭐ (4)",eq:"26 − 13 − # = 4",a:[9],h:"26 − 13 = 13. 13 − 4 = ?"},
+ {t:"choice",q:"Кезекте 12 ұл және 8 қыз тұр. 5-еуі билет алып кетті. Қалғаны неше бала?",o:["(12 + 8) − 5 = 15","12 + 8 + 5 = 25","12 − 8 − 5 = −1"],a:0,h:"Барлығы 20, 5-еуі кетті."}
+];
+const TOTAL = LESSON.length + QS.length;
+
+// ---------- Күй ----------
+let step=0, xp=0, streak=0, solved=0, tries=0;
+const $ = id => document.getElementById(id);
+function hud(){ $("xp").textContent=xp; $("streak").textContent=streak;
+  $("track").innerHTML = Array.from({length:TOTAL},(_,i)=>`<div class="dot ${i<step?'done':i===step?'now':''}"></div>`).join(""); }
+function balls(m,f){ let s=""; for(let i=0;i<m;i++)s+=`<span class="b m"></span>`; for(let i=0;i<f;i++)s+=`<span class="b f"></span>`; return `<div class="balls">${s}</div>`; }
+
+// ---------- Сабақ ----------
+function showLesson(){
+  const L=LESSON[step]; let body="";
+  body+=`<div class="bot"><div class="robot">🤖</div><div class="bubble">${L.say}</div></div>`;
+  body+=`<p class="q">📘 ${L.task}</p>`;
+  if(L.steps){
+    body+=`<div id="rv"></div><button class="btn o" onclick="reveal()">Келесі қадам 👉</button>`;
+    window._r=0;
+  } else {
+    body+=balls(L.m,L.f)+`<div id="rv"></div><button class="btn o" onclick="reveal1()">${L.btn}</button>`;
+  }
+  body+=`<div><button class="btn g" id="nx" style="display:none" onclick="next()">Әрі қарай ➡️</button></div>`;
+  $("stage").innerHTML=body;
+}
+function reveal1(){ $("rv").innerHTML=`<div class="reveal">${LESSON[step].res}</div>`; $("nx").style.display="inline-block"; }
+function reveal(){ const L=LESSON[step]; const r=window._r++;
+  if(r<L.steps.length){ $("rv").insertAdjacentHTML("beforeend",`<div class="reveal">${L.steps[r]}</div>`); }
+  if(window._r>=L.steps.length){ $("nx").style.display="inline-block"; }
+}
+function next(){ step++; render(); }
+
+// ---------- Ойын ----------
+function showQ(){
+  const Q=QS[step-LESSON.length]; tries=0; let body="";
+  body+=`<div class="bot"><div class="robot">🤖</div><div class="bubble">Сұрақ ${step-LESSON.length+1} / ${QS.length}</div></div><p class="q">${Q.q}</p>`;
+  if(Q.t==="choice"){
+    body+=Q.o.map((o,i)=>`<button class="opt" onclick="pick(${i},this)">${o}</button>`).join("");
+  } else {
+    body+=`<div class="eq">${Q.eq.replace("#",'<input class="n" id="in" type="number" inputmode="numeric">')}</div><button class="btn" onclick="check()">Тексеру ✅</button>`;
+  }
+  body+=`<div class="fb" id="fb"></div>`;
+  $("stage").innerHTML=body;
+  const inp=$("in"); if(inp){ inp.focus(); inp.addEventListener("keydown",e=>{if(e.key==="Enter")check();}); }
+}
+function good(el){
+  const gain = tries===0?10:5; xp+=gain; streak++; solved++; hud();
+  if(el) el.classList.add("ok");
+  $("fb").className="fb ok"; $("fb").textContent="🎉 Дұрыс! +"+gain+" XP";
+  if(streak>=3) $("fb").textContent+="  🔥 Серия: "+streak;
+  lock(); setTimeout(()=>{step++;render();},1100);
+}
+function bad(el,h){
+  tries++; streak=0; hud(); if(el) el.classList.add("no");
+  $("fb").className="fb no"; $("fb").textContent="🤔 Тағы байқап көр. Кеңес: "+h;
+}
+function lock(){ document.querySelectorAll(".opt,.btn").forEach(b=>b.disabled=true); }
+function pick(i,el){ const Q=QS[step-LESSON.length]; if(i===Q.a) good(el); else bad(el,Q.h); }
+function check(){ const Q=QS[step-LESSON.length]; const inp=$("in"); const v=Number(inp.value);
+  if(inp.value!=="" && v===Q.a[0]){ inp.classList.add("ok"); good(null);} else { inp.classList.remove("ok"); bad(inp,Q.h);} }
+
+// ---------- Қорытынды ----------
+function showEnd(){
+  const max=QS.length*10, ball = xp>=70?1:0, stars = xp>=90?3:xp>=60?2:1;
+  $("stage").innerHTML=`<div class="big">🏆</div><div class="stars">${"⭐".repeat(stars)}${"☆".repeat(3-stars)}</div>
+   <div class="score">Нәтиже: ${xp} / ${max} XP</div>
+   <div class="score">Мұғалімге балл: ${ball} / 1</div>
+   <div class="bubble">🤖 Жарайсың, Математик-Батыр! Енді сен жай есептерді құрама есепке айналдыра аласың.</div>
+   <div style="text-align:center"><button class="btn g" onclick="restart()">🔄 Қайта ойнау</button></div>`;
+  for(let i=0;i<28;i++){ const c=document.createElement("div"); c.className="conf"; c.textContent=["🎉","⭐","🎈","🇰🇿"][i%4];
+    c.style.left=Math.random()*100+"vw"; c.style.animationDelay=Math.random()*1.2+"s"; document.body.appendChild(c); setTimeout(()=>c.remove(),4200); }
+}
+function restart(){ step=0;xp=0;streak=0;render(); }
+function render(){ hud(); if(step<LESSON.length) showLesson(); else if(step<TOTAL) showQ(); else showEnd(); }
+render();
+</script>
+</body>
+</html>
